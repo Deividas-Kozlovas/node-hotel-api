@@ -1,11 +1,12 @@
-const http = require('http');
-const PORT = 3000;
+const express = require("express");
+const morgan = require("morgan");
 
-const server = http.createServer((req, res) => {
-    res.writeHead(200, {"Content-Type": "text/plain"});
-    res.end("hello");
-});
+const app = express();
 
-server.listen(PORT, () => {
-    console.log(`Server runing at http://localhost:${PORT}`);
-})
+if(process.env.NODE_ENV === "development"){
+    app.use(morgan("dev"));
+}
+
+app.use(express.json());
+
+module.exports = app;

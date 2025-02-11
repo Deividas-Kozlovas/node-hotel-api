@@ -1,17 +1,26 @@
-const http = require('http');
-const PORT = 3000;
+const { default: mongoose } = require("mongoose");
+const dotenv = require("dotenv");
 
-const server = http.createServer((req, res) => {
-    res.writeHead(200, {"Content-Type": "text/plain"});
-    
-    if(req.url === "/"){
-        res.end("Welcome home");
-    }else{
-        res.writeHead(404);
-        res.end("Page Not Found")
-    }
+dotenv.config({ path: "./config.env" });
+
+const app = require("./app");
+const port = process.env.PORT || 3000;
+
+const DB = process.env.DATABASE.replace(
+  "<PASSWORD>",
+  process.env.DATABASE_PASSWORD
+);
+
+mongoose
+  .connect(DB)
+  .then(() => {
+    console.log("✅ DB connection is OK");
+  })
+  .catch((err) => {
+    console.error("❌ DB connection error:", err.message);
+    process.exit(1);
+  });
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
-
-server.listen(PORT, () => {
-    console.log(`Server runing at http://localhost:${PORT}`);
-})
