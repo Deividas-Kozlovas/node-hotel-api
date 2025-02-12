@@ -8,8 +8,10 @@ if(process.env.NODE_ENV === "development"){
 }
 
 const roomRouter = require("./routes/roomRoutes");
+const reservationRouter = require("./routes/reservationRoutes");
 app.use(express.json());
 
 app.use("/api/v1/rooms", roomRouter)
+app.use("/api/v1/reservations", reservationRouter)
 
 module.exports = app;
