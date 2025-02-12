@@ -9,7 +9,6 @@ exports.createRoom = async (req, res) => {
     });
   } catch (err) {
     console.error("Error creating room:", err);
-
     res.status(400).json({
       status: "fail",
       message:
@@ -24,13 +23,13 @@ exports.getAllRooms = async (req, res) => {
   try {
     const rooms = await Room.find();
     res.status(200).json({
-      results: rooms.length, // ✅ FIXED hotels.length → rooms.length
-      data: {
-        rooms,
-      },
+      status: "success",
+      results: rooms.length,
+      data: { rooms },
     });
   } catch (err) {
     res.status(500).json({
+      status: "error",
       message:
         process.env.NODE_ENV === "development"
           ? err.message
@@ -41,20 +40,21 @@ exports.getAllRooms = async (req, res) => {
 
 exports.getRoom = async (req, res) => {
   try {
-    const room = await Room.findById(req.params.id); // ✅ FIXED findOne → findById
+    const room = await Room.findById(req.params.id);
     if (!room) {
       return res.status(404).json({
+        status: "fail",
         message: "No room with this ID was found",
       });
     }
 
     res.status(200).json({
-      data: {
-        room,
-      },
+      status: "success",
+      data: { room },
     });
   } catch (err) {
     res.status(500).json({
+      status: "error",
       message:
         process.env.NODE_ENV === "development"
           ? err.message
@@ -68,13 +68,15 @@ exports.deleteRoom = async (req, res) => {
     const deletedRoom = await Room.findByIdAndDelete(req.params.id);
     if (!deletedRoom) {
       return res.status(404).json({
+        status: "fail",
         message: "No room found to delete",
       });
     }
 
-    res.status(204).json({}); // ✅ FIXED status from 200 → 204
+    res.status(204).json({ status: "success", data: null }); 
   } catch (err) {
     res.status(500).json({
+      status: "error",
       message:
         process.env.NODE_ENV === "development"
           ? err.message
@@ -88,23 +90,23 @@ exports.updateRoom = async (req, res) => {
     const updatedRoom = await Room.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true, runValidators: true } // ✅ FIXED missing parameters
+      { new: true, runValidators: true }
     );
 
     if (!updatedRoom) {
       return res.status(404).json({
+        status: "fail",
         message: "No room found to update",
       });
     }
 
     res.status(200).json({
       status: "success",
-      data: {
-        updatedRoom,
-      },
+      data: { updatedRoom },
     });
   } catch (err) {
     res.status(500).json({
+      status: "error",
       message:
         process.env.NODE_ENV === "development"
           ? err.message
