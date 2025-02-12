@@ -13,7 +13,7 @@ const roomSchema = new mongoose.Schema({
   },
   floor: {
     type: Number,
-    default: 1, 
+    default: 1,
     min: [1, "Lowest floor is 1"],
     max: [4, "Highest floor is 4"],
   },
@@ -32,11 +32,11 @@ const roomSchema = new mongoose.Schema({
   },
   parking: {
     type: Boolean,
-    required: [true, "Specify if the room has parking"], 
+    required: [true, "Specify if the room has parking"],
   },
   breakfast: {
     type: Boolean,
-    required: [true, "Specify if the room includes breakfast"], 
+    required: [true, "Specify if the room includes breakfast"],
   },
   createdAt: {
     type: Date,
