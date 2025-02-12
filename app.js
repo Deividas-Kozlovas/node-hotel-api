@@ -7,6 +7,9 @@ if(process.env.NODE_ENV === "development"){
     app.use(morgan("dev"));
 }
 
+const roomRouter = require("./routes/roomRoutes");
 app.use(express.json());
+
+app.use("/api/v1/rooms", roomRouter)
 
 module.exports = app;
