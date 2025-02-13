@@ -33,11 +33,51 @@ exports.createReservation = async (req, res) => {
 
 exports.getAllReservations = async (req, res) => {
   try {
-    const reservations = await Reservation.find();
+    const { code, name } = req.body;
+
+    let query = {};
+
+    if (name) {
+      query.name = { $regex: name, $options: "i" };
+    }
+
+    if (code) {
+      query.code = code;
+    }
+
+    const reservations = await Reservation.find(query)
+      .populate({
+        path: "room",
+        select: "number",
+      })
+      .sort({ checkin: 1 });
+
+    if (reservations.length === 0) {
+      return res.status(401).json({
+        status: "fail",
+        message: "Unauthorized or no reservations found matching the criteria",
+      });
+    }
+
+    const formattedReservations = reservations.map((reservation) => ({
+      id: reservation._id,
+      code: reservation.code,
+      name: reservation.name,
+      created_at: reservation.createdAt,
+      reservation_information: {
+        id: reservation._id,
+        checkin: reservation.checkin,
+        checkout: reservation.checkout,
+        room: {
+          id: reservation.room._id,
+          number: reservation.room.number,
+        },
+      },
+    }));
+
     res.status(200).json({
       status: "success",
-      results: reservations.length,
-      data: { reservations },
+      reservations: formattedReservations,
     });
   } catch (err) {
     res.status(500).json({

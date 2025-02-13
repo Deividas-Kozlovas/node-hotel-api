@@ -1,45 +1,64 @@
 const mongoose = require("mongoose");
 
-const reservationSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, "Guest name is required"],
+function generateReservationCode() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let code = "";
+  for (let i = 0; i < 10; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+const reservationSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Guest name is required"],
+    },
+    address: {
+      type: String,
+      required: [true, "Address is required"],
+    },
+    city: {
+      type: String,
+      required: [true, "City is required"],
+    },
+    zip: {
+      type: String,
+      required: [true, "ZIP code is required"],
+    },
+    country: {
+      type: String,
+      required: [true, "Country is required"],
+    },
+    checkin: {
+      type: Date,
+      required: [true, "Check-in date is required"],
+    },
+    checkout: {
+      type: Date,
+      required: [true, "Check-out date is required"],
+    },
+    room: {
+      type: mongoose.Schema.ObjectId,
+      ref: "Room",
+      required: [true, "Room is required"],
+    },
+    user: {
+      type: mongoose.Schema.ObjectId,
+      ref: "User",
+      required: [true, "You must select a user"],
+    },
+    code: {
+      type: String,
+      unique: true,
+      default: generateReservationCode,
+    },
   },
-  address: {
-    type: String,
-    required: [true, "Address is required"],
-  },
-  city: {
-    type: String,
-    required: [true, "City is required"],
-  },
-  zip: {
-    type: String,
-    required: [true, "ZIP code is required"],
-  },
-  country: {
-    type: String,
-    required: [true, "Country is required"],
-  },
-  checkin: {
-    type: Date,
-    required: [true, "Check-in date is required"],
-  },
-  checkout: {
-    type: Date,
-    required: [true, "Check-out date is required"],
-  },
-  room: {
-    type: mongoose.Schema.ObjectId,
-    ref: "Room",
-    required: [true, "Room is required"], // Ensure the room is selected
-  },
-  user: {
-    type: mongoose.Schema.ObjectId,
-    ref: "User",
-    required: [true, "You must select a user"],
-  },
-});
+  {
+    timestamps: true,
+  }
+);
 
 reservationSchema.pre("save", async function (next) {
   const existingReservation = await Reservation.findOne({
@@ -56,6 +75,11 @@ reservationSchema.pre("save", async function (next) {
     return next(
       new Error("This room is already reserved during the selected dates")
     );
+  }
+
+  const existingCode = await Reservation.findOne({ code: this.code });
+  if (existingCode) {
+    this.code = generateReservationCode();
   }
 
   next();
