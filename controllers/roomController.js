@@ -129,3 +129,77 @@ exports.updateRoom = async (req, res) => {
     });
   }
 };
+
+exports.getAvailableRooms = async (req, res) => {
+  try {
+    const { checkinDate, checkoutDate } = req.params;
+
+    if (!checkinDate || !checkoutDate) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Checkin and checkout dates are required",
+      });
+    }
+
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(checkinDate) || !dateRegex.test(checkoutDate)) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Bad checkin or checkout date format. Expected YYYY-MM-DD",
+      });
+    }
+
+    const checkin = new Date(checkinDate);
+    const checkout = new Date(checkoutDate);
+
+    if (isNaN(checkin.getTime()) || isNaN(checkout.getTime())) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Invalid date format",
+      });
+    }
+
+    const rooms = await Room.find().populate("reservations");
+
+    const availableRooms = rooms.map((room) => {
+      let isAvailable = true;
+
+      if (room.reservations && room.reservations.length > 0) {
+        for (let reservation of room.reservations) {
+          const reservationCheckin = new Date(reservation.checkin);
+          const reservationCheckout = new Date(reservation.checkout);
+
+          if (
+            (checkin >= reservationCheckin && checkin < reservationCheckout) ||
+            (checkout > reservationCheckin &&
+              checkout <= reservationCheckout) ||
+            (checkin < reservationCheckin && checkout > reservationCheckout)
+          ) {
+            isAvailable = false;
+            break;
+          }
+        }
+      }
+
+      return {
+        id: room._id,
+        number: room.number,
+        availability: isAvailable,
+      };
+    });
+
+    res.status(200).json({
+      status: "success",
+      rooms: availableRooms,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: "error",
+      message:
+        process.env.NODE_ENV === "development"
+          ? err.message
+          : "Error checking room availability",
+    });
+  }
+};

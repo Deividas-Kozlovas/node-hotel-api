@@ -17,4 +17,9 @@ router
   .patch(roomController.updateRoom)
   .delete(roomController.deleteRoom);
 
+router.get(
+  "/availability/checkin/:checkinDate/checkout/:checkoutDate",
+  roomController.getAvailableRooms
+);
+
 module.exports = router;
