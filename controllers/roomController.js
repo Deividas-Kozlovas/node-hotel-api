@@ -73,7 +73,7 @@ exports.deleteRoom = async (req, res) => {
       });
     }
 
-    res.status(204).json({ status: "success", data: null }); 
+    res.status(204).json({ status: "success", data: null });
   } catch (err) {
     res.status(500).json({
       status: "error",
@@ -87,11 +87,10 @@ exports.deleteRoom = async (req, res) => {
 
 exports.updateRoom = async (req, res) => {
   try {
-    const updatedRoom = await Room.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
+    const updatedRoom = await Room.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!updatedRoom) {
       return res.status(404).json({

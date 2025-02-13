@@ -7,14 +7,17 @@ const router = express.Router();
 router.param("id", reservationMiddleware.checkReservationID);
 
 router
-    .route("/")
-    .get(reservationController.getAllReservations)
-    .post(reservationMiddleware.validateReservation, reservationController.createReservation);
+  .route("/")
+  .get(reservationController.getAllReservations)
+  .post(
+    reservationMiddleware.validateReservation,
+    reservationController.createReservation
+  );
 
 router
-    .route("/:id")
-    .get(reservationController.getReservation)
-    .patch(reservationController.updateReservation)
-    .delete(reservationController.deleteReservation)
+  .route("/:id")
+  .get(reservationController.getReservation)
+  .patch(reservationController.updateReservation)
+  .delete(reservationController.deleteReservation);
 
 module.exports = router;

@@ -24,7 +24,7 @@ exports.validateRoom = (req, res, next) => {
     !breakfast)
   ) {
     return res.status(400).json({
-      status: "failed",
+      status: "fail",
       message: "Please fill in all fields",
     });
   }
@@ -35,7 +35,7 @@ exports.validateRoom = (req, res, next) => {
 exports.checkRoomID = async (req, res, next, val) => {
   if (!mongoose.Types.ObjectId.isValid(val)) {
     return res.status(400).json({
-      status: "failed",
+      status: "fail",
       message: "Room ID format invalid",
     });
   }
@@ -43,7 +43,7 @@ exports.checkRoomID = async (req, res, next, val) => {
   const room = await Room.findById(val);
   if (!room) {
     return res.status(404).json({
-      status: "failed",
+      status: "fail",
       message: "Room ID is invalid",
     });
   }
