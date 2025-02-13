@@ -40,7 +40,6 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-// 🔹 Pre-save Hook: Hash Password Before Saving
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     return next();
@@ -51,7 +50,6 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-// 🔹 Method to Compare Passwords
 userSchema.methods.correctPassword = async function (
   candidatePassword,
   userPassword
@@ -59,7 +57,6 @@ userSchema.methods.correctPassword = async function (
   return await bcrypt.compare(candidatePassword, userPassword);
 };
 
-// 🔹 Method to Check if Password Was Changed After JWT Issued
 userSchema.methods.changePasswordAfter = function (JWTTimestamp) {
   if (this.passwordChangedAt) {
     const changeTimestamp = parseInt(this.passwordChangedAt.getTime() / 1000);

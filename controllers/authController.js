@@ -1,27 +1,15 @@
-const User = require("../models/userModels");
+const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const { promisify } = require("util");
 
-// Function to generate a token
 const signToken = (id) => {
   return jwt.sign({ id: id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
 };
 
-// Signup route
 exports.signup = async (req, res) => {
   try {
-    // Ensure email doesn't already exist
-    const existingUser = await User.findOne({ email: req.body.email });
-    if (existingUser) {
-      return res.status(400).json({
-        status: "Failed",
-        message: "Email already exists",
-      });
-    }
-
-    // Create a new user
     const newUser = await User.create({
       name: req.body.name,
       email: req.body.email,
@@ -29,7 +17,6 @@ exports.signup = async (req, res) => {
       passwordConfirm: req.body.passwordConfirm,
     });
 
-    // Create a token for the new user
     const token = signToken(newUser._id);
 
     res.status(201).json({
@@ -45,37 +32,68 @@ exports.signup = async (req, res) => {
   }
 };
 
-// Login route
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Check if email and password exist
     if (!email || !password) {
       throw new Error("Please provide email and password");
     }
 
-    // Check if user exists and if password is correct
     const user = await User.findOne({ email }).select("+password");
     if (!user || !(await user.correctPassword(password, user.password))) {
       throw new Error("Incorrect email or password");
     }
 
-    // Create token
-    const token = signToken(user._id);
+    const token = signToken(user.id);
 
-    // Respond with user info and token
     res.status(200).json({
       status: "Success",
       data: {
-        id: user._id,
+        id: user.id,
         name: user.name,
         email: user.email,
       },
       token,
     });
   } catch (err) {
-    res.status(400).json({
+    res.status(401).json({
+      status: "Failed",
+      message: err.message,
+    });
+  }
+};
+
+exports.protect = async (req, res, next) => {
+  let token;
+
+  try {
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer")
+    ) {
+      token = req.headers.authorization.split(" ")[1];
+    }
+
+    if (!token) {
+      throw new Error("You are not logged in. Please log in to get access.");
+    }
+
+    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+    const currentUser = await User.findById(decoded.id);
+    if (!currentUser) {
+      throw new Error("The user belonging to this token no longer exists.");
+    }
+
+    if (currentUser.changePasswordAfter(decoded.iat)) {
+      throw new Error("User changed password after token was issued.");
+    }
+
+    req.user = currentUser;
+    next();
+  } catch (err) {
+    res.status(401).json({
       status: "Failed",
       message: err.message,
     });

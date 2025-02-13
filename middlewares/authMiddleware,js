@@ -1,5 +1,4 @@
-const mongoose = require("mongoose");
-const User = require("../models/userModel");
+const User = require("../models/userModels");
 
 // Protect route to verify if the user is logged in and has a valid token
 exports.protect = async (req, res, next) => {
@@ -16,6 +15,7 @@ exports.protect = async (req, res, next) => {
 
     if (!token) {
       throw new Error("You are not logged in. Please log in to get access.");
+      d;
     }
 
     // Verify the token
