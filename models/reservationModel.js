@@ -29,6 +29,15 @@ const reservationSchema = new mongoose.Schema({
     type: Date,
     required: [true, "Check-out date is required"],
   },
+  room: {
+    type: mongoose.Schema.ObjectId,
+    ref: "Room",
+  },
+  user: {
+    type: mongoose.Schema.ObjectId,
+    ref: "User",
+    required: [true, "You must select a user"],
+  },
 });
 
 const Reservation = mongoose.model("Reservation", reservationSchema);

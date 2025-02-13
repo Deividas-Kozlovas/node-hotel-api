@@ -21,7 +21,8 @@ exports.createRoom = async (req, res) => {
 
 exports.getAllRooms = async (req, res) => {
   try {
-    const rooms = await Room.find();
+    const rooms = await Room.find().populate("reservation"); // Ensure you're populating the correct field
+
     res.status(200).json({
       status: "success",
       results: rooms.length,

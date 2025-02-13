@@ -30,6 +30,10 @@ const userSchema = new mongoose.Schema({
       message: "Passwords do not match",
     },
   },
+  reservation: {
+    type: mongoose.Schema.ObjectId,
+    ref: "Reservation",
+  },
   passwordChangedAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
