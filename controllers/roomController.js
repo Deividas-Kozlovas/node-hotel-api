@@ -21,15 +21,14 @@ exports.createRoom = async (req, res) => {
 
 exports.getAllRooms = async (req, res) => {
   try {
-    // Query to get all rooms and populate their reservations
     const rooms = await Room.find()
       .populate({
-        path: "reservations", // Populate the `reservations` field inside rooms
-        select: "checkin checkout", // Only include relevant fields from reservations
+        path: "reservations",
+        select: "checkin checkout",
       })
       .select(
         "number capacity floor room_image pricing wifi parking breakfast"
-      ); // Only include relevant fields from rooms
+      );
 
     res.status(200).json({
       status: "success",
@@ -49,7 +48,15 @@ exports.getAllRooms = async (req, res) => {
 
 exports.getRoom = async (req, res) => {
   try {
-    const room = await Room.findById(req.params.id);
+    const room = await Room.findById(req.params.id)
+      .populate({
+        path: "reservations",
+        select: "checkin checkout",
+      })
+      .select(
+        "number capacity floor room_image pricing wifi parking breakfast"
+      );
+
     if (!room) {
       return res.status(404).json({
         status: "fail",
