@@ -119,7 +119,7 @@ exports.deleteReservation = async (req, res) => {
   try {
     const deletedReservation = await Reservation.findByIdAndDelete(
       req.params.id
-    ); // ✅ Fixed req.body → req.params
+    );
     if (!deletedReservation) {
       return res.status(404).json({
         status: "fail",

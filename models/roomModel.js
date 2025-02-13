@@ -40,7 +40,6 @@ const roomSchema = new mongoose.Schema({
   },
   reservations: [
     {
-      // This field will hold the reference to all reservations for this room
       type: mongoose.Schema.ObjectId,
       ref: "Reservation",
     },
