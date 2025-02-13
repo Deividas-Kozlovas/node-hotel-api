@@ -32,12 +32,33 @@ const reservationSchema = new mongoose.Schema({
   room: {
     type: mongoose.Schema.ObjectId,
     ref: "Room",
+    required: [true, "Room is required"], // Ensure the room is selected
   },
   user: {
     type: mongoose.Schema.ObjectId,
     ref: "User",
     required: [true, "You must select a user"],
   },
+});
+
+reservationSchema.pre("save", async function (next) {
+  const existingReservation = await Reservation.findOne({
+    room: this.room,
+    $or: [
+      {
+        checkin: { $lt: this.checkout },
+        checkout: { $gt: this.checkin },
+      },
+    ],
+  });
+
+  if (existingReservation) {
+    return next(
+      new Error("This room is already reserved during the selected dates")
+    );
+  }
+
+  next();
 });
 
 const Reservation = mongoose.model("Reservation", reservationSchema);

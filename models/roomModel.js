@@ -38,10 +38,13 @@ const roomSchema = new mongoose.Schema({
     type: Boolean,
     required: [true, "Specify if the room includes breakfast"],
   },
-  reservation: {
-    type: mongoose.Schema.ObjectId,
-    ref: "Reservation",
-  },
+  reservations: [
+    {
+      // This field will hold the reference to all reservations for this room
+      type: mongoose.Schema.ObjectId,
+      ref: "Reservation",
+    },
+  ],
   createdAt: {
     type: Date,
     default: Date.now,

@@ -1,8 +1,25 @@
 const Reservation = require("../models/reservationModel");
+const User = require("../models/userModel");
+const Room = require("../models/roomModel");
+const mongoose = require("mongoose");
 
 exports.createReservation = async (req, res) => {
   try {
-    const newReservation = await Reservation.create(req.body);
+    // Ensure the room field is cast to ObjectId
+    const roomId = new mongoose.Types.ObjectId(req.body.room);
+
+    // Create the reservation with the roomId as an ObjectId
+    const newReservation = await Reservation.create({
+      ...req.body,
+      room: roomId, // Ensure the room field is an ObjectId
+    });
+
+    // Optionally, update the Room to include this reservation if needed
+    await Room.findByIdAndUpdate(
+      newReservation.room,
+      { $push: { reservations: newReservation._id } } // Push the new reservation ID to the room's reservations array
+    );
+
     res.status(201).json({
       status: "success",
       data: newReservation,
