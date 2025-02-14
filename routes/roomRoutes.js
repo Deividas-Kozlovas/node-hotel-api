@@ -1,6 +1,7 @@
 const express = require("express");
 const roomController = require("../controllers/roomController");
 const roomMiddleware = require("../middlewares/roomMiddleware");
+const userMiddleware = require("../middlewares/userMiddleware");
 
 const router = express.Router();
 
@@ -8,7 +9,7 @@ router.param("id", roomMiddleware.checkRoomID);
 
 router
   .route("/")
-  .get(roomController.getAllRooms)
+  .get(userMiddleware.protect, roomController.getAllRooms)
   .post(roomMiddleware.validateRoom, roomController.createRoom);
 
 router

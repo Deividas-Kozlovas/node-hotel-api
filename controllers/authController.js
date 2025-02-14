@@ -1,23 +1,34 @@
-const User = require("../models/userModel");
+const userRepository = require("../repositories/userRepository");
 const jwt = require("jsonwebtoken");
-const { promisify } = require("util");
-
-const signToken = (id) => {
-  return jwt.sign({ id: id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN,
-  });
-};
 
 exports.signup = async (req, res) => {
   try {
-    const newUser = await User.create({
-      name: req.body.name,
-      email: req.body.email,
-      password: req.body.password,
-      passwordConfirm: req.body.passwordConfirm,
+    const { name, email, password, passwordConfirm } = req.body;
+
+    if (password !== passwordConfirm) {
+      return res
+        .status(400)
+        .json({ status: "Failed", message: "Passwords do not match" });
+    }
+
+    const existingUser = await userRepository.findUserByEmail(email);
+    if (existingUser) {
+      return res.status(400).json({
+        status: "Failed",
+        message: "User already exists with that email.",
+      });
+    }
+
+    const newUser = await userRepository.createUser({
+      name,
+      email,
+      password,
+      passwordConfirm,
     });
 
-    const token = signToken(newUser._id);
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN,
+    });
 
     res.status(201).json({
       status: "Success",
@@ -27,7 +38,10 @@ exports.signup = async (req, res) => {
   } catch (err) {
     res.status(400).json({
       status: "Failed",
-      message: err.message,
+      message:
+        process.env.NODE_ENV === "development"
+          ? err.message
+          : "Invalid data. Please check your input.",
     });
   }
 };
@@ -37,65 +51,37 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      throw new Error("Please provide email and password");
+      return res.status(400).json({
+        status: "Failed",
+        message: "Please provide email and password",
+      });
     }
 
-    const user = await User.findOne({ email }).select("+password");
+    const user = await userRepository
+      .findUserByEmail(email)
+      .select("+password");
     if (!user || !(await user.correctPassword(password, user.password))) {
-      throw new Error("Incorrect email or password");
+      return res
+        .status(401)
+        .json({ status: "Failed", message: "Incorrect email or password" });
     }
 
-    const token = signToken(user.id);
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN,
+    });
 
     res.status(200).json({
       status: "Success",
-      data: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-      },
+      data: { id: user.id, name: user.name, email: user.email },
       token,
     });
   } catch (err) {
     res.status(401).json({
       status: "Failed",
-      message: err.message,
-    });
-  }
-};
-
-exports.protect = async (req, res, next) => {
-  let token;
-
-  try {
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer")
-    ) {
-      token = req.headers.authorization.split(" ")[1];
-    }
-
-    if (!token) {
-      throw new Error("You are not logged in. Please log in to get access.");
-    }
-
-    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-
-    const currentUser = await User.findById(decoded.id);
-    if (!currentUser) {
-      throw new Error("The user belonging to this token no longer exists.");
-    }
-
-    if (currentUser.changePasswordAfter(decoded.iat)) {
-      throw new Error("User changed password after token was issued.");
-    }
-
-    req.user = currentUser;
-    next();
-  } catch (err) {
-    res.status(401).json({
-      status: "Failed",
-      message: err.message,
+      message:
+        process.env.NODE_ENV === "development"
+          ? err.message
+          : "Invalid email or password.",
     });
   }
 };
