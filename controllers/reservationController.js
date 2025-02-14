@@ -1,25 +1,9 @@
-const Reservation = require("../models/reservationModel");
-const User = require("../models/userModel");
-const Room = require("../models/roomModel");
-const mongoose = require("mongoose");
+const reservationService = require("../services/reservationService");
 
 exports.createReservation = async (req, res) => {
   try {
-    const roomId = new mongoose.Types.ObjectId(req.body.room);
-
-    const newReservation = await Reservation.create({
-      ...req.body,
-      room: roomId,
-    });
-
-    await Room.findByIdAndUpdate(newReservation.room, {
-      $push: { reservations: newReservation._id },
-    });
-
-    res.status(201).json({
-      status: "success",
-      data: newReservation,
-    });
+    const newReservation = await reservationService.createReservation(req.body);
+    res.status(201).json({ status: "success", data: newReservation });
   } catch (err) {
     res.status(400).json({
       status: "fail",
@@ -33,138 +17,65 @@ exports.createReservation = async (req, res) => {
 
 exports.getAllReservations = async (req, res) => {
   try {
-    const { code, name } = req.body;
-
-    let query = {};
-
-    if (name) {
-      query.name = { $regex: name, $options: "i" };
-    }
-
-    if (code) {
-      query.code = code;
-    }
-
-    const reservations = await Reservation.find(query)
-      .populate({
-        path: "room",
-        select: "number",
-      })
-      .sort({ checkin: 1 });
-
-    if (reservations.length === 0) {
-      return res.status(401).json({
-        status: "fail",
-        message: "Unauthorized or no reservations found matching the criteria",
-      });
-    }
-
-    const formattedReservations = reservations.map((reservation) => ({
-      id: reservation._id,
-      code: reservation.code,
-      name: reservation.name,
-      created_at: reservation.createdAt,
-      reservation_information: {
-        id: reservation._id,
-        checkin: reservation.checkin,
-        checkout: reservation.checkout,
-        room: {
-          id: reservation.room._id,
-          number: reservation.room.number,
-        },
-      },
-    }));
-
-    res.status(200).json({
-      status: "success",
-      reservations: formattedReservations,
-    });
+    const reservations = await reservationService.getAllReservations(req.body);
+    res.status(200).json({ status: "success", reservations });
   } catch (err) {
-    res.status(500).json({
-      status: "error",
+    res.status(404).json({
+      status: "fail",
       message:
         process.env.NODE_ENV === "development"
           ? err.message
-          : "Error fetching reservations",
+          : "No reservations found matching the criteria.",
     });
   }
 };
 
 exports.getReservation = async (req, res) => {
   try {
-    const reservation = await Reservation.findById(req.params.id);
-    if (!reservation) {
-      return res.status(404).json({
-        status: "fail",
-        message: "No reservation with this ID was found",
-      });
-    }
-
-    res.status(200).json({
-      status: "success",
-      data: { reservation },
-    });
-  } catch (err) {
-    res.status(500).json({
-      status: "error",
-      message:
-        process.env.NODE_ENV === "development"
-          ? err.message
-          : "Error fetching the reservation",
-    });
-  }
-};
-
-exports.deleteReservation = async (req, res) => {
-  try {
-    const deletedReservation = await Reservation.findByIdAndDelete(
+    const reservation = await reservationService.getReservationById(
       req.params.id
     );
-    if (!deletedReservation) {
-      return res.status(404).json({
-        status: "fail",
-        message: "No reservation found to delete",
-      });
-    }
-
-    res.status(204).json({});
+    res.status(200).json({ status: "success", data: { reservation } });
   } catch (err) {
-    res.status(500).json({
-      status: "error",
+    res.status(404).json({
+      status: "fail",
       message:
         process.env.NODE_ENV === "development"
           ? err.message
-          : "Error deleting reservation, please try later",
+          : "No reservation found with this ID.",
     });
   }
 };
 
 exports.updateReservation = async (req, res) => {
   try {
-    const updatedReservation = await Reservation.findByIdAndUpdate(
+    const updatedReservation = await reservationService.updateReservation(
       req.params.id,
-      req.body,
-      { new: true, runValidators: true }
+      req.body
     );
-
-    if (!updatedReservation) {
-      return res.status(404).json({
-        status: "fail",
-        message: "No reservation found to update",
-      });
-    }
-
-    res.status(200).json({
-      status: "success",
-      data: { updatedReservation },
-    });
+    res.status(200).json({ status: "success", data: { updatedReservation } });
   } catch (err) {
     res.status(500).json({
       status: "error",
       message:
         process.env.NODE_ENV === "development"
           ? err.message
-          : "Error updating reservation, please try later",
+          : "Error updating reservation, please try later.",
+    });
+  }
+};
+
+exports.deleteReservation = async (req, res) => {
+  try {
+    await reservationService.deleteReservation(req.params.id);
+    res.status(204).json({ status: "success" });
+  } catch (err) {
+    res.status(500).json({
+      status: "error",
+      message:
+        process.env.NODE_ENV === "development"
+          ? err.message
+          : "Error deleting reservation, please try later.",
     });
   }
 };
