@@ -1,35 +1,95 @@
-const Room = require("../models/roomModel");
+const roomRepository = require("../repositories/roomRepository");
 
-const checkRoomAvailability = async (checkin, checkout) => {
-  const rooms = await Room.find().populate("reservations");
+const createRoom = async (roomData) => {
+  if (!roomData.number || !roomData.capacity) {
+    throw new Error("Room number and capacity are required.");
+  }
 
-  const availableRooms = rooms.map((room) => {
-    let isAvailable = true;
+  if (roomData.capacity < 1) {
+    throw new Error("Capacity must be at least 1.");
+  }
 
-    if (room.reservations && room.reservations.length > 0) {
-      for (let reservation of room.reservations) {
-        const reservationCheckin = new Date(reservation.checkin);
-        const reservationCheckout = new Date(reservation.checkout);
+  // Check if room number already exists
+  const existingRoom = await roomRepository.getRoomByNumber(roomData.number);
+  if (existingRoom) {
+    throw new Error("Room number already exists.");
+  }
 
-        if (
-          (checkin >= reservationCheckin && checkin < reservationCheckout) ||
-          (checkout > reservationCheckin && checkout <= reservationCheckout) ||
-          (checkin < reservationCheckin && checkout > reservationCheckout)
-        ) {
-          isAvailable = false;
-          break;
-        }
-      }
-    }
-
-    return {
-      id: room._id,
-      number: room.number,
-      availability: isAvailable,
-    };
-  });
-
-  return availableRooms;
+  return await roomRepository.createRoom(roomData);
 };
 
-module.exports = { checkRoomAvailability };
+const getAllRooms = async () => {
+  return await roomRepository.getAllRooms();
+};
+
+const getRoomById = async (roomId) => {
+  if (!roomId) {
+    throw new Error("Room ID is required.");
+  }
+
+  const room = await roomRepository.getRoomById(roomId);
+  if (!room) {
+    throw new Error("Room not found.");
+  }
+
+  return room;
+};
+
+const updateRoom = async (roomId, updateData) => {
+  if (!roomId) {
+    throw new Error("Room ID is required.");
+  }
+
+  const room = await roomRepository.getRoomById(roomId);
+  if (!room) {
+    throw new Error("No room found to update.");
+  }
+
+  return await roomRepository.updateRoom(roomId, updateData);
+};
+
+const deleteRoom = async (roomId) => {
+  if (!roomId) {
+    throw new Error("Room ID is required.");
+  }
+
+  const room = await roomRepository.getRoomById(roomId);
+  if (!room) {
+    throw new Error("No room found to delete.");
+  }
+
+  return await roomRepository.deleteRoom(roomId);
+};
+
+const checkRoomAvailability = async (checkinDate, checkoutDate) => {
+  if (!checkinDate || !checkoutDate) {
+    throw new Error("Check-in and check-out dates are required.");
+  }
+
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(checkinDate) || !dateRegex.test(checkoutDate)) {
+    throw new Error("Invalid date format. Expected YYYY-MM-DD.");
+  }
+
+  const checkin = new Date(checkinDate);
+  const checkout = new Date(checkoutDate);
+
+  if (isNaN(checkin.getTime()) || isNaN(checkout.getTime())) {
+    throw new Error("Invalid date format.");
+  }
+
+  if (checkin >= checkout) {
+    throw new Error("Check-out date must be after check-in date.");
+  }
+
+  return await roomRepository.checkRoomAvailability(checkin, checkout);
+};
+
+module.exports = {
+  createRoom,
+  getAllRooms,
+  getRoomById,
+  updateRoom,
+  deleteRoom,
+  checkRoomAvailability,
+};
