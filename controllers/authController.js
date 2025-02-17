@@ -57,9 +57,7 @@ exports.login = async (req, res) => {
       });
     }
 
-    const user = await userRepository
-      .findUserByEmail(email)
-      .select("+password");
+    const user = await userRepository.findUserByEmail(email);
     if (!user || !(await user.correctPassword(password, user.password))) {
       return res
         .status(401)
