@@ -2,6 +2,22 @@ const jwt = require("jsonwebtoken");
 const { promisify } = require("util");
 const userService = require("../services/userService");
 
+exports.verifyToken = async (token) => {
+  try {
+    const response = await axios.get("/user/verify-token", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Token verification failed:",
+      error.response?.data || error.message
+    );
+    return null;
+  }
+};
+
 exports.protect = async (req, res, next) => {
   try {
     let token;
