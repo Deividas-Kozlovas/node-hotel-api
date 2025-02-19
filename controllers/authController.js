@@ -1,33 +1,13 @@
-const userRepository = require("../repositories/userRepository");
-const jwt = require("jsonwebtoken");
+const userService = require("../services/userService");
 
 exports.signup = async (req, res) => {
   try {
     const { name, email, password, passwordConfirm } = req.body;
-
-    if (password !== passwordConfirm) {
-      return res
-        .status(400)
-        .json({ status: "Failed", message: "Passwords do not match" });
-    }
-
-    const existingUser = await userRepository.findUserByEmail(email);
-    if (existingUser) {
-      return res.status(400).json({
-        status: "Failed",
-        message: "User already exists with that email.",
-      });
-    }
-
-    const newUser = await userRepository.createUser({
+    const { newUser, token } = await userService.signupService({
       name,
       email,
       password,
       passwordConfirm,
-    });
-
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN,
     });
 
     res.status(201).json({
@@ -36,12 +16,12 @@ exports.signup = async (req, res) => {
       token,
     });
   } catch (err) {
-    res.status(400).json({
+    res.status(err.statusCode || 400).json({
       status: "Failed",
       message:
         process.env.NODE_ENV === "development"
           ? err.message
-          : "Invalid data. Please check your input.",
+          : err.userMessage || "Invalid data. Please check your input.",
     });
   }
 };
@@ -49,24 +29,7 @@ exports.signup = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({
-        status: "Failed",
-        message: "Please provide email and password",
-      });
-    }
-
-    const user = await userRepository.findUserByEmail(email);
-    if (!user || !(await user.correctPassword(password, user.password))) {
-      return res
-        .status(401)
-        .json({ status: "Failed", message: "Incorrect email or password" });
-    }
-
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN,
-    });
+    const { user, token } = await userService.loginService({ email, password });
 
     res.status(200).json({
       status: "Success",
@@ -74,7 +37,7 @@ exports.login = async (req, res) => {
       token,
     });
   } catch (err) {
-    res.status(401).json({
+    res.status(err.statusCode || 401).json({
       status: "Failed",
       message:
         process.env.NODE_ENV === "development"

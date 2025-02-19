@@ -3,7 +3,7 @@ const router = express.Router();
 const authController = require("../controllers/authController");
 const userMiddleware = require("../middlewares/userMiddleware");
 
-router.get("/profile", userMiddleware.protect, (req, res) => {
+router.get("/verify-token", userMiddleware.protect, (req, res) => {
   res.status(200).json({
     status: "Success",
     user: req.user,

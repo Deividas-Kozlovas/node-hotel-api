@@ -5,7 +5,7 @@ const userMiddleware = require("../middlewares/userMiddleware");
 
 const router = express.Router();
 
-router.param("id", roomMiddleware.checkRoomID);
+// router.param("id", roomMiddleware.checkRoomID);
 
 router
   .route("/")

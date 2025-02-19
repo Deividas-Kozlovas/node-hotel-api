@@ -1,115 +1,68 @@
 const roomService = require("../services/roomService");
 
-exports.createRoom = async (req, res) => {
+const getAllRooms = async (req, res, next) => {
+  try {
+    const rooms = await roomService.getAllRooms();
+    res.status(200).json({ status: "success", data: rooms });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const getRoom = async (req, res, next) => {
+  try {
+    const room = await roomService.getRoomById(req.params.id);
+    res.status(200).json({ status: "success", data: room });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const createRoom = async (req, res, next) => {
   try {
     const newRoom = await roomService.createRoom(req.body);
     res.status(201).json({ status: "success", data: newRoom });
   } catch (err) {
-    res.status(400).json({
-      status: "fail",
-      message:
-        process.env.NODE_ENV === "development"
-          ? err.message
-          : "Invalid data. Please check your input.",
-    });
+    next(err);
   }
 };
 
-exports.getAllRooms = async (req, res) => {
-  try {
-    const rooms = await roomService.getAllRooms();
-    res
-      .status(200)
-      .json({ status: "success", results: rooms.length, data: { rooms } });
-  } catch (err) {
-    res.status(500).json({
-      status: "error",
-      message:
-        process.env.NODE_ENV === "development"
-          ? err.message
-          : "Error fetching rooms. Please try again later.",
-    });
-  }
-};
-
-exports.getRoom = async (req, res) => {
-  try {
-    const room = await roomService.getRoomById(req.params.id);
-    if (!room) {
-      return res.status(404).json({
-        status: "fail",
-        message: "No room found with this ID.",
-      });
-    }
-    res.status(200).json({ status: "success", data: { room } });
-  } catch (err) {
-    res.status(500).json({
-      status: "error",
-      message:
-        process.env.NODE_ENV === "development"
-          ? err.message
-          : "Error fetching room details. Please try again later.",
-    });
-  }
-};
-
-exports.updateRoom = async (req, res) => {
+const updateRoom = async (req, res, next) => {
   try {
     const updatedRoom = await roomService.updateRoom(req.params.id, req.body);
-    if (!updatedRoom) {
-      return res.status(404).json({
-        status: "fail",
-        message: "No room found with this ID.",
-      });
-    }
-    res.status(200).json({ status: "success", data: { updatedRoom } });
+    res.status(200).json({ status: "success", data: updatedRoom });
   } catch (err) {
-    res.status(400).json({
-      status: "fail",
-      message:
-        process.env.NODE_ENV === "development"
-          ? err.message
-          : "Invalid update data. Please check your input.",
-    });
+    next(err);
   }
 };
 
-exports.deleteRoom = async (req, res) => {
+const deleteRoom = async (req, res, next) => {
   try {
-    const deletedRoom = await roomService.deleteRoom(req.params.id);
-    if (!deletedRoom) {
-      return res.status(404).json({
-        status: "fail",
-        message: "No room found with this ID.",
-      });
-    }
-    res.status(204).json({ status: "success", data: null });
+    await roomService.deleteRoom(req.params.id);
+    res.status(204).json({ status: "success" });
   } catch (err) {
-    res.status(500).json({
-      status: "error",
-      message:
-        process.env.NODE_ENV === "development"
-          ? err.message
-          : "Error deleting room. Please try again later.",
-    });
+    next(err);
   }
 };
 
-exports.getAvailableRooms = async (req, res) => {
+const getAvailableRooms = async (req, res, next) => {
   try {
     const { checkinDate, checkoutDate } = req.params;
     const availableRooms = await roomService.checkRoomAvailability(
       checkinDate,
       checkoutDate
     );
-    res.status(200).json({ status: "success", rooms: availableRooms });
+    res.status(200).json({ status: "success", data: availableRooms });
   } catch (err) {
-    res.status(400).json({
-      status: "fail",
-      message:
-        process.env.NODE_ENV === "development"
-          ? err.message
-          : "Invalid date format. Please use YYYY-MM-DD.",
-    });
+    next(err);
   }
+};
+
+module.exports = {
+  getAllRooms,
+  getRoom,
+  createRoom,
+  updateRoom,
+  deleteRoom,
+  getAvailableRooms,
 };

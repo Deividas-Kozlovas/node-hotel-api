@@ -5,12 +5,12 @@ exports.createReservation = async (req, res) => {
     const newReservation = await reservationService.createReservation(req.body);
     res.status(201).json({ status: "success", data: newReservation });
   } catch (err) {
-    res.status(400).json({
+    res.status(err.statusCode || 400).json({
       status: "fail",
       message:
         process.env.NODE_ENV === "development"
           ? err.message
-          : "Invalid data. Please check inputs.",
+          : err.userMessage || "Invalid data. Please check your inputs.",
     });
   }
 };
@@ -18,14 +18,14 @@ exports.createReservation = async (req, res) => {
 exports.getAllReservations = async (req, res) => {
   try {
     const reservations = await reservationService.getAllReservations(req.body);
-    res.status(200).json({ status: "success", reservations });
+    res.status(200).json({ status: "success", data: reservations });
   } catch (err) {
-    res.status(404).json({
-      status: "fail",
+    res.status(err.statusCode || 500).json({
+      status: "error",
       message:
         process.env.NODE_ENV === "development"
           ? err.message
-          : "No reservations found matching the criteria.",
+          : "Error fetching reservations. Please try again later.",
     });
   }
 };
@@ -35,14 +35,14 @@ exports.getReservation = async (req, res) => {
     const reservation = await reservationService.getReservationById(
       req.params.id
     );
-    res.status(200).json({ status: "success", data: { reservation } });
+    res.status(200).json({ status: "success", data: reservation });
   } catch (err) {
-    res.status(404).json({
-      status: "fail",
+    res.status(err.statusCode || 500).json({
+      status: "error",
       message:
         process.env.NODE_ENV === "development"
           ? err.message
-          : "No reservation found with this ID.",
+          : "Error fetching reservation. Please try again later.",
     });
   }
 };
@@ -53,29 +53,31 @@ exports.updateReservation = async (req, res) => {
       req.params.id,
       req.body
     );
-    res.status(200).json({ status: "success", data: { updatedReservation } });
+    res.status(200).json({ status: "success", data: updatedReservation });
   } catch (err) {
-    res.status(500).json({
+    res.status(err.statusCode || 500).json({
       status: "error",
       message:
         process.env.NODE_ENV === "development"
           ? err.message
-          : "Error updating reservation, please try later.",
+          : "Error updating reservation, please try again later.",
     });
   }
 };
 
 exports.deleteReservation = async (req, res) => {
   try {
-    await reservationService.deleteReservation(req.params.id);
+    const deletedReservation = await reservationService.deleteReservation(
+      req.params.id
+    );
     res.status(204).json({ status: "success" });
   } catch (err) {
-    res.status(500).json({
+    res.status(err.statusCode || 500).json({
       status: "error",
       message:
         process.env.NODE_ENV === "development"
           ? err.message
-          : "Error deleting reservation, please try later.",
+          : "Error deleting reservation, please try again later.",
     });
   }
 };
