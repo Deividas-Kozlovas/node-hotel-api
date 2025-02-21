@@ -1,3 +1,5 @@
+const AppError = require("../utils/appError");
+
 const reservationRepository = require("../repositories/reservationRepository");
 
 const createReservation = async (reservationData) => {

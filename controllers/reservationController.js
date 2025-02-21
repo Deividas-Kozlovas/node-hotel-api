@@ -1,83 +1,68 @@
 const reservationService = require("../services/reservationService");
 
-exports.createReservation = async (req, res) => {
+exports.createReservation = async (req, res, next) => {
   try {
     const newReservation = await reservationService.createReservation(req.body);
     res.status(201).json({ status: "success", data: newReservation });
   } catch (err) {
-    res.status(err.statusCode || 400).json({
-      status: "fail",
-      message:
-        process.env.NODE_ENV === "development"
-          ? err.message
-          : err.userMessage || "Invalid data. Please check your inputs.",
-    });
+    next(err);
   }
 };
 
-exports.getAllReservations = async (req, res) => {
+exports.getAllReservations = async (req, res, next) => {
   try {
-    const reservations = await reservationService.getAllReservations(req.body);
+    const reservations = await reservationService.getAllReservations();
     res.status(200).json({ status: "success", data: reservations });
   } catch (err) {
-    res.status(err.statusCode || 500).json({
-      status: "error",
-      message:
-        process.env.NODE_ENV === "development"
-          ? err.message
-          : "Error fetching reservations. Please try again later.",
-    });
+    next(err);
   }
 };
 
-exports.getReservation = async (req, res) => {
+exports.getReservation = async (req, res, next) => {
   try {
     const reservation = await reservationService.getReservationById(
       req.params.id
     );
+    if (!reservation) {
+      const error = new Error("Reservation not found");
+      error.statusCode = 404;
+      return next(error);
+    }
     res.status(200).json({ status: "success", data: reservation });
   } catch (err) {
-    res.status(err.statusCode || 500).json({
-      status: "error",
-      message:
-        process.env.NODE_ENV === "development"
-          ? err.message
-          : "Error fetching reservation. Please try again later.",
-    });
+    next(err);
   }
 };
 
-exports.updateReservation = async (req, res) => {
+exports.updateReservation = async (req, res, next) => {
   try {
     const updatedReservation = await reservationService.updateReservation(
       req.params.id,
       req.body
     );
+    if (!updatedReservation) {
+      const error = new Error("Reservation not found to update");
+      error.statusCode = 404;
+      return next(error);
+    }
     res.status(200).json({ status: "success", data: updatedReservation });
   } catch (err) {
-    res.status(err.statusCode || 500).json({
-      status: "error",
-      message:
-        process.env.NODE_ENV === "development"
-          ? err.message
-          : "Error updating reservation, please try again later.",
-    });
+    next(err);
   }
 };
 
-exports.deleteReservation = async (req, res) => {
+exports.deleteReservation = async (req, res, next) => {
   try {
     const deletedReservation = await reservationService.deleteReservation(
       req.params.id
     );
+    if (!deletedReservation) {
+      const error = new Error("Reservation not found to delete");
+      error.statusCode = 404;
+      return next(error);
+    }
     res.status(204).json({ status: "success" });
   } catch (err) {
-    res.status(err.statusCode || 500).json({
-      status: "error",
-      message:
-        process.env.NODE_ENV === "development"
-          ? err.message
-          : "Error deleting reservation, please try again later.",
-    });
+    next(err);
   }
 };

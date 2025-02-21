@@ -11,13 +11,8 @@ const createReservation = async (reservationData) => {
   return newReservation;
 };
 
-const getAllReservations = async (query) => {
-  return await Reservation.find(query)
-    .populate({
-      path: "room",
-      select: "number",
-    })
-    .sort({ checkin: 1 });
+const getAllReservations = async () => {
+  return await Reservation.find();
 };
 
 const getReservationById = async (reservationId) => {
