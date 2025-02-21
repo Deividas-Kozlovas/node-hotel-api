@@ -1,6 +1,6 @@
 const userService = require("../services/userService");
 
-exports.signup = async (req, res) => {
+exports.signup = async (req, res, next) => {
   try {
     const { name, email, password, passwordConfirm } = req.body;
     const { newUser, token } = await userService.signupService({
@@ -16,17 +16,11 @@ exports.signup = async (req, res) => {
       token,
     });
   } catch (err) {
-    res.status(err.statusCode || 400).json({
-      status: "Failed",
-      message:
-        process.env.NODE_ENV === "development"
-          ? err.message
-          : err.userMessage || "Invalid data. Please check your input.",
-    });
+    next(err);
   }
 };
 
-exports.login = async (req, res) => {
+exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const { user, token } = await userService.loginService({ email, password });
@@ -37,12 +31,6 @@ exports.login = async (req, res) => {
       token,
     });
   } catch (err) {
-    res.status(err.statusCode || 401).json({
-      status: "Failed",
-      message:
-        process.env.NODE_ENV === "development"
-          ? err.message
-          : "Invalid email or password.",
-    });
+    next(err);
   }
 };

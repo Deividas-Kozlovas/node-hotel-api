@@ -5,11 +5,11 @@ const userMiddleware = require("../middlewares/userMiddleware");
 
 const router = express.Router();
 
-// router.param("id", roomMiddleware.checkRoomID);
+router.param("id", roomMiddleware.checkRoomID);
 
 router
   .route("/")
-  .get(roomController.getAllRooms)
+  .get(userMiddleware.protect, roomController.getAllRooms)
   .post(roomMiddleware.validateRoom, roomController.createRoom);
 
 router
@@ -20,6 +20,7 @@ router
 
 router.get(
   "/availability/checkin/:checkinDate/checkout/:checkoutDate",
+  roomMiddleware.validateDates,
   roomController.getAvailableRooms
 );
 

@@ -23,6 +23,10 @@ const updateRoom = async (roomId, updateData) => {
   });
 };
 
+const getRoomByNumber = async (roomNumber) => {
+  return await Room.findOne({ number: roomNumber });
+};
+
 const deleteRoom = async (roomId) => {
   return await Room.findByIdAndDelete(roomId);
 };
@@ -62,6 +66,7 @@ module.exports = {
   getAllRooms,
   getRoomById,
   updateRoom,
+  getRoomByNumber,
   deleteRoom,
   checkRoomAvailability,
 };

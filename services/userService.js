@@ -21,6 +21,7 @@ const createUser = async (userData) => {
 };
 
 const signupService = async (userData) => {
+  console.log(userData);
   const { name, email, password, passwordConfirm } = userData;
 
   if (password !== passwordConfirm) {
@@ -32,7 +33,12 @@ const signupService = async (userData) => {
     throw new AppError("User already exists with that email.", 400);
   }
 
-  const newUser = await userRepository.createUser({ name, email, password });
+  const newUser = await userRepository.createUser({
+    name,
+    email,
+    password,
+    passwordConfirm,
+  });
 
   const token = signToken(newUser._id);
 

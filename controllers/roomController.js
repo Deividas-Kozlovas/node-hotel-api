@@ -21,6 +21,7 @@ const getRoom = async (req, res, next) => {
 const createRoom = async (req, res, next) => {
   try {
     const newRoom = await roomService.createRoom(req.body);
+
     res.status(201).json({ status: "success", data: newRoom });
   } catch (err) {
     next(err);

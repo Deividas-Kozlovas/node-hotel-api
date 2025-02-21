@@ -2,7 +2,7 @@ const User = require("../models/userModel");
 
 const findUserByEmail = async (email) => {
   const user = await User.findOne({ email }).select("+password");
-  return user; // Ensure you return the full user document
+  return user;
 };
 
 const findUserById = async (id) => {
