@@ -10,7 +10,7 @@ router.param("id", roomMiddleware.checkRoomID);
 router
   .route("/")
   .get(roomController.getAllRooms)
-  .post(roomMiddleware.validateRoom, roomController.createRoom);
+  .post(roomController.createRoom);
 
 router
   .route("/:id")
