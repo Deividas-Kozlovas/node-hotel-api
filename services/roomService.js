@@ -70,7 +70,6 @@ const checkRoomAvailability = async (checkinDate, checkoutDate) => {
 
   return await roomRepository.checkRoomAvailability(checkin, checkout);
 };
-
 module.exports = {
   createRoom,
   getAllRooms,
